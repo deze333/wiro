@@ -1,4 +1,4 @@
-Web Intelligent Resource Objects
+Intelligent Resource Objects
 ================================
 Resource repository for web applications
 ----------------------------------------

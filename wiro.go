@@ -113,13 +113,34 @@ func SetOnReload(repoId string, fn func()) (err error) {
 }
 
 // Retrieves resource from specified repository.
-func Get(repoId, rsrcId string, domain, language, version string) (rsrc *Resource) {
+// dlv is domain, language, version which can be omitted meaning default.
+func Get(repoId, rsrcId string, dlv ...string) (rsrc *Resource) {
     r := _library[repoId]
     if r == nil {
         return nil
     }
+
+    var domain, language, version string
+    switch len(dlv) {
+    case 0:
+    case 1:
+        domain = dlv[0]
+    case 2:
+        domain = dlv[0]
+        language = dlv[1]
+    case 3:
+        domain = dlv[0]
+        language = dlv[1]
+        version = dlv[2]
+    default:
+        domain = dlv[0]
+        language = dlv[1]
+        version = dlv[2]
+    }
+
     return r.Get(rsrcId, domain, language, version)
 }
+
 
 // Retrieves repository
 func getRepo(id string) (repo *Repo, ok bool) {

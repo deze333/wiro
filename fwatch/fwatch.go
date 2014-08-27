@@ -3,7 +3,7 @@
 package fwatch
 
 import (
-	"code.google.com/p/go.exp/inotify"
+	"code.google.com/p/go.exp/fsnotify"
 	"fmt"
 	"time"
 )
@@ -27,7 +27,7 @@ type Watch struct {
     id       string
     id2      string
 	dir      string
-	watcher  *inotify.Watcher
+	watcher  *fsnotify.Watcher
 	callback func(string, string)
 	tdelta   time.Duration
 	timer    *time.Timer
@@ -82,13 +82,13 @@ func (c *Callbacker) execute() {
 // Adds directory watcher. 
 // rid is repository id that will be passed to callback.
 func WatchDir(dir string, rid, rid2 string, callback func(string, string)) (id int, err error) {
-	return addWatch(dir, rid, rid2, callback, inotify.IN_CREATE|inotify.IN_MOVE|inotify.IN_DELETE|inotify.IN_CLOSE_WRITE)
+	return addWatch(dir, rid, rid2, callback)
 }
 
 // Adds specific file watcher.
 // rid is repository id that will be passed to callback.
 func WatchFile(dir string, rid, rid2 string, callback func(string, string)) (id int, err error) {
-	return addWatch(dir, rid, rid2, callback, inotify.IN_CLOSE_WRITE|inotify.IN_MOVE|inotify.IN_DELETE)
+	return addWatch(dir, rid, rid2, callback)
 }
 
 //------------------------------------------------------------
@@ -96,20 +96,16 @@ func WatchFile(dir string, rid, rid2 string, callback func(string, string)) (id 
 //------------------------------------------------------------
 
 // Creates customizable watcher.
-func addWatch(dir string, rid, rid2 string, callback func(string, string), flags uint32) (id int, err error) {
-	var watcher *inotify.Watcher
-	watcher, err = inotify.NewWatcher()
+func addWatch(dir string, rid, rid2 string, callback func(string, string)) (id int, err error) {
+	var watcher *fsnotify.Watcher
+	watcher, err = fsnotify.NewWatcher()
 	if err != nil {
 		return -1, err
 	}
 
 	w := &Watch{rid, rid2, dir, watcher, callback, fileDamper, nil}
 
-	if flags != 0 {
-		err = watcher.AddWatch(dir, flags)
-	} else {
-		err = watcher.Watch(dir)
-	}
+	err = watcher.Watch(dir)
 
 	if err != nil {
 		return -1, err

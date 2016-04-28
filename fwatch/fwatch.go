@@ -3,9 +3,10 @@
 package fwatch
 
 import (
-	"code.google.com/p/go.exp/fsnotify"
 	"fmt"
 	"time"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 //------------------------------------------------------------
@@ -13,8 +14,8 @@ import (
 //------------------------------------------------------------
 
 const (
-    // Time to elapse without changes take place
-	fileDamper time.Duration = 3 * time.Second
+	// Time to elapse without changes take place
+	fileDamper     time.Duration = 3 * time.Second
 	callbackDamper time.Duration = 1 * time.Second
 )
 
@@ -24,8 +25,8 @@ const (
 
 // Watch definition
 type Watch struct {
-    id       string
-    id2      string
+	id       string
+	id2      string
 	dir      string
 	watcher  *fsnotify.Watcher
 	callback func(string, string)
@@ -35,6 +36,7 @@ type Watch struct {
 
 // Active watches map
 var _watches = map[int]*Watch{}
+
 // Next watch map id
 var _watchNextId = 0
 
@@ -44,9 +46,9 @@ var _watchNextId = 0
 
 // Callback damper, prevents from multiple callbacks on same repository
 type Callbacker struct {
-    watches  []*Watch
-	tdelta   time.Duration
-	timer    *time.Timer
+	watches []*Watch
+	tdelta  time.Duration
+	timer   *time.Timer
 }
 
 // Callbacker
@@ -57,29 +59,29 @@ var _callbacker = Callbacker{tdelta: callbackDamper}
 //------------------------------------------------------------
 
 func (c *Callbacker) execute() {
-    executed := []string{}
-    for _, w := range c.watches {
-        isExecuted := false
-        for _, id := range executed {
-            if w.id == id {
-                isExecuted = true
-                break
-            }
-        }
-        if isExecuted {
-            continue
-        }
-        executed = append(executed, w.id)
-        w.callback(w.id, w.id2)
-    }
-    c.watches = []*Watch{}
+	executed := []string{}
+	for _, w := range c.watches {
+		isExecuted := false
+		for _, id := range executed {
+			if w.id == id {
+				isExecuted = true
+				break
+			}
+		}
+		if isExecuted {
+			continue
+		}
+		executed = append(executed, w.id)
+		w.callback(w.id, w.id2)
+	}
+	c.watches = []*Watch{}
 }
 
 //------------------------------------------------------------
 // Exported functions
 //------------------------------------------------------------
 
-// Adds directory watcher. 
+// Adds directory watcher.
 // rid is repository id that will be passed to callback.
 func WatchDir(dir string, rid, rid2 string, callback func(string, string)) (id int, err error) {
 	return addWatch(dir, rid, rid2, callback)
@@ -165,7 +167,7 @@ func scheduleCallback(w *Watch, dir string) {
 		go func() {
 			<-w.timer.C
 			//w.callback(w.id, w.id2)
-            queueCallback(w)
+			queueCallback(w)
 			w.timer = nil
 		}()
 
@@ -175,12 +177,12 @@ func scheduleCallback(w *Watch, dir string) {
 }
 
 func queueCallback(w *Watch) {
-    _callbacker.watches = append(_callbacker.watches, w)
+	_callbacker.watches = append(_callbacker.watches, w)
 	if _callbacker.timer == nil {
 		_callbacker.timer = time.NewTimer(_callbacker.tdelta)
 		go func() {
 			<-_callbacker.timer.C
-            _callbacker.execute()
+			_callbacker.execute()
 			_callbacker.timer = nil
 		}()
 
@@ -188,4 +190,3 @@ func queueCallback(w *Watch) {
 		_callbacker.timer.Reset(_callbacker.tdelta)
 	}
 }
-

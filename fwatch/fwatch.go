@@ -145,15 +145,19 @@ func watch(w *Watch) {
 	for {
 		select {
 
-		case ev := <-w.watcher.Event:
-			if ev == nil {
+		case ev, ok := <-w.watcher.Event:
+			if !ok || ev == nil {
 				//fmt.Println("[fwatch] closed watch for:", w.dir)
 				return
 			}
 			//fmt.Println("[fwatch] change", ev)
 			scheduleCallback(w, ev.Name)
 
-		case err := <-w.watcher.Error:
+		case err, ok := <-w.watcher.Error:
+			if !ok {
+				//fmt.Println("[fwatch] closed watch for:", w.dir)
+				return
+			}
 			fmt.Println("[fwatch] error:", err)
 		}
 	}

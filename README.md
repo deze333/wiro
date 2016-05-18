@@ -10,4 +10,4 @@ Wiro is a compact repository for flexible content retrieval based on request key
 
 All resources are memcached for max performance.
 
-Repository files are watched for changes (via Linux inotify) and memory cache updated upon changes.
+Repository files are watched for changes (via fsnotify) and memory cache updated upon changes.

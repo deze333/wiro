@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"code.google.com/p/go.exp/fsnotify"
+	"github.com/fsnotify/fsnotify"
 )
 
 //------------------------------------------------------------
@@ -107,7 +107,7 @@ func addWatch(dir string, rid, rid2 string, callback func(string, string)) (id i
 
 	w := &Watch{rid, rid2, dir, watcher, callback, fileDamper, nil}
 
-	err = watcher.Watch(dir)
+	err = watcher.Add(dir)
 
 	if err != nil {
 		return -1, err
@@ -145,15 +145,15 @@ func watch(w *Watch) {
 	for {
 		select {
 
-		case ev, ok := <-w.watcher.Event:
-			if !ok || ev == nil {
+		case ev, ok := <-w.watcher.Events:
+			if !ok {
 				//fmt.Println("[fwatch] closed watch for:", w.dir)
 				return
 			}
 			//fmt.Println("[fwatch] change", ev)
 			scheduleCallback(w, ev.Name)
 
-		case err, ok := <-w.watcher.Error:
+		case err, ok := <-w.watcher.Errors:
 			if !ok {
 				//fmt.Println("[fwatch] closed watch for:", w.dir)
 				return

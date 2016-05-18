@@ -142,25 +142,24 @@ func Close(id int) {
 // Go routine that waits for an change event and notifies via callback
 func watch(w *Watch) {
 	//fmt.Println("[fwatch] watching for changes in:", w.dir)
+WatchLoop:
 	for {
 		select {
-
 		case ev, ok := <-w.watcher.Events:
 			if !ok {
-				//fmt.Println("[fwatch] closed watch for:", w.dir)
-				return
+				break WatchLoop
 			}
 			//fmt.Println("[fwatch] change", ev)
 			scheduleCallback(w, ev.Name)
 
 		case err, ok := <-w.watcher.Errors:
 			if !ok {
-				//fmt.Println("[fwatch] closed watch for:", w.dir)
-				return
+				break WatchLoop
 			}
 			fmt.Println("[fwatch] error:", err)
 		}
 	}
+	//fmt.Println("[fwatch] closed watch for:", w.dir)
 }
 
 // Event damper prevents from too many events firing at once.
